@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NutriScan AI — Smart Nutrition Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090c;--surface:#0f1115;--surface2:#161a20;--surface3:#1c2028;
+  --border:#1e2430;--border2:#252d3a;
+  --text:#e2e8f5;--text2:#8892a4;--text3:#4a5568;
+  --green:#22d3a0;--green2:#16a87e;--green-dim:rgba(34,211,160,0.1);--green-glow:rgba(34,211,160,0.2);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.1);
+  --orange:#fb923c;--orange-dim:rgba(251,146,60,0.1);
+  --red:#f87171;--red-dim:rgba(248,113,113,0.1);
+  --yellow:#fbbf24;--yellow-dim:rgba(251,191,36,0.1);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.1);
+  --r:8px;--r2:12px;--r3:16px;
+  --sidebar:240px;
+  --transition:0.18s ease;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* ── Login Screen ── */
+#login-screen{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center}
+#login-screen.hidden{display:none}
+.login-box{width:100%;max-width:380px;padding:40px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);box-shadow:0 24px 80px rgba(0,0,0,0.6)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;justify-content:center}
+.login-logo-icon{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--green),var(--blue));display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 24px var(--green-glow)}
+.login-logo-text{font-size:22px;font-weight:700;letter-spacing:-0.5px}
+.login-logo-text span{color:var(--green)}
+.login-title{font-size:18px;font-weight:600;margin-bottom:6px;text-align:center}
+.login-sub{color:var(--text2);font-size:13px;text-align:center;margin-bottom:28px}
+.login-field{margin-bottom:16px}
+.login-field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;letter-spacing:0.5px;text-transform:uppercase}
+.login-field input{width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border var(--transition)}
+.login-field input:focus{border-color:var(--green)}
+.login-field input.invalid{border-color:var(--red)}
+.btn-login{width:100%;padding:12px;background:var(--green);color:#000;font-weight:600;font-size:14px;border:none;border-radius:var(--r);cursor:pointer;transition:background var(--transition),transform var(--transition)}
+.btn-login:hover{background:var(--green2);transform:translateY(-1px)}
+.login-hint{margin-top:14px;font-size:12px;color:var(--text3);text-align:center}
+
+/* ── App Shell ── */
+#app{display:none;min-height:100vh}
+#app.visible{display:flex}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sidebar);min-width:var(--sidebar);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:sticky;top:0}
+.sidebar-header{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+.sidebar-logo{display:flex;align-items:center;gap:9px}
+.sidebar-logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--green),var(--blue));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;box-shadow:0 0 12px var(--green-glow)}
+.sidebar-logo-text{font-size:15px;font-weight:700;letter-spacing:-0.3px}
+.sidebar-logo-text span{color:var(--green)}
+.sidebar-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-section{margin-bottom:20px}
+.nav-section-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;transition:all var(--transition);margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,211,160,0.2)}
+.nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.sidebar-footer{padding:12px 10px;border-top:1px solid var(--border)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--r);background:var(--surface2);border:1px solid var(--border)}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:11px;color:var(--text3)}
+.logout-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:2px;transition:color var(--transition)}
+.logout-btn:hover{color:var(--red)}
+
+/* ── Main Content ── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow-x:hidden}
+
+/* ── Topbar ── */
+.topbar{padding:14px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);position:sticky;top:0;z-index:10}
+.topbar-title{font-size:16px;font-weight:600;letter-spacing:-0.2px}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.api-status{display:flex;align-items:center;gap:7px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);transition:all var(--transition)}
+.api-status:hover{border-color:var(--border2);color:var(--text)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);transition:background var(--transition);flex-shrink:0}
+.status-dot.healthy{background:var(--green);box-shadow:0 0 6px var(--green)}
+.status-dot.error{background:var(--red);box-shadow:0 0 6px var(--red)}
+.status-dot.checking{background:var(--yellow);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* ── Page ── */
+.page{display:none;flex:1;padding:28px;overflow-y:auto}
+.page.active{display:block}
+.page-header{margin-bottom:28px}
+.page-title{font-size:22px;font-weight:700;letter-spacing:-0.5px;margin-bottom:4px}
+.page-sub{color:var(--text2);font-size:13px}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px}
+.card + .card{margin-top:16px}
+.card-title{font-size:13px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;color:var(--text2);margin-bottom:16px}
+
+/* ── Form Elements ── */
+.form-grid{display:grid;gap:14px}
+.form-grid-2{grid-template-columns:1fr 1fr}
+.form-grid-3{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:12px;font-weight:500;color:var(--text2);letter-spacing:0.3px}
+.form-label .req{color:var(--green);margin-left:2px}
+.form-input,.form-select{width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border var(--transition),background var(--transition)}
+.form-input:focus,.form-select:focus{border-color:var(--green);background:var(--surface3)}
+.form-input.invalid,.form-select.invalid{border-color:var(--red)!important}
+.form-input.valid{border-color:rgba(34,211,160,0.4)}
+.form-select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238892a4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.form-select option{background:var(--surface2)}
+.field-error{font-size:11px;color:var(--red);display:none;margin-top:2px}
+.field-error.show{display:block}
+.form-hint{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all var(--transition);font-family:'Inter',sans-serif}
+.btn-primary{background:var(--green);color:#000}
+.btn-primary:hover{background:var(--green2);transform:translateY(-1px);box-shadow:0 4px 16px var(--green-glow)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+.btn-secondary:hover{background:var(--surface3);border-color:var(--border2)}
+.btn-ghost{background:transparent;color:var(--text2);padding:8px 12px}
+.btn-ghost:hover{color:var(--text);background:var(--surface2)}
+.btn-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,113,113,0.2)}
+.btn-danger:hover{background:rgba(248,113,113,0.2)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-icon{padding:8px;border-radius:var(--r)}
+.btn-full{width:100%;justify-content:center}
+
+/* ── Upload Zone ── */
+.upload-zone{border:2px dashed var(--border2);border-radius:var(--r2);padding:28px 20px;text-align:center;cursor:pointer;transition:all var(--transition);position:relative}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--green);background:var(--green-dim)}
+.upload-zone-icon{font-size:32px;margin-bottom:10px;opacity:0.5}
+.upload-zone-text{color:var(--text2);font-size:13px}
+.upload-zone-text strong{color:var(--green);cursor:pointer}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-preview{display:none;margin-top:14px;position:relative}
+.upload-preview img{max-width:100%;max-height:180px;border-radius:var(--r);border:1px solid var(--border2);object-fit:cover}
+.remove-preview{position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.7);border:none;color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+
+/* ── Macro Toggle ── */
+.macro-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);font-size:13px;color:var(--text2);transition:all var(--transition);user-select:none}
+.macro-toggle:hover{color:var(--text);border-color:var(--border2)}
+.macro-toggle-icon{transition:transform var(--transition)}
+.macro-toggle-icon.open{transform:rotate(90deg)}
+.macro-inputs{display:none;margin-top:12px}
+
+/* ── Loader ── */
+.loader{display:none;text-align:center;padding:32px}
+.loader.show{display:block}
+.spinner{width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-text{color:var(--text2);font-size:13px}
+
+/* ── Skeleton ── */
+.skeleton{background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:var(--r)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── Result Area ── */
+.result-area{display:none}
+.result-area.show{display:block}
+.placeholder-state{padding:40px 20px;text-align:center;color:var(--text3)}
+.placeholder-icon{font-size:40px;margin-bottom:12px;opacity:0.4}
+.placeholder-text{font-size:14px}
+
+/* ── Nutrition Cards ── */
+.nutrition-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.nutrition-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;text-align:center}
+.nutrition-card.calories{border-color:rgba(251,146,60,0.3);background:var(--orange-dim)}
+.nutrition-card.protein{border-color:rgba(96,165,250,0.3);background:var(--blue-dim)}
+.nutrition-card.carbs{border-color:rgba(251,191,36,0.3);background:var(--yellow-dim)}
+.nutrition-card.fats{border-color:rgba(167,139,250,0.3);background:var(--purple-dim)}
+.nutrition-label{font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--text2);margin-bottom:8px}
+.nutrition-value{font-size:26px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:-1px}
+.nutrition-unit{font-size:11px;color:var(--text3);margin-top:2px}
+.nutrition-card.calories .nutrition-value{color:var(--orange)}
+.nutrition-card.protein .nutrition-value{color:var(--blue)}
+.nutrition-card.carbs .nutrition-value{color:var(--yellow)}
+.nutrition-card.fats .nutrition-value{color:var(--purple)}
+
+/* ── Health Score ── */
+.health-score-row{display:flex;align-items:center;gap:16px;padding:16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:16px}
+.score-ring{position:relative;width:64px;height:64px;flex-shrink:0}
+.score-ring svg{transform:rotate(-90deg)}
+.score-ring-bg{stroke:var(--border2);fill:none}
+.score-ring-fill{fill:none;stroke-linecap:round;transition:stroke-dashoffset 0.8s ease}
+.score-ring-fill.excellent{stroke:var(--green)}
+.score-ring-fill.good{stroke:var(--blue)}
+.score-ring-fill.moderate{stroke:var(--yellow)}
+.score-ring-fill.poor{stroke:var(--red)}
+.score-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-size:17px;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1}
+.score-label-text{font-size:9px;color:var(--text2);font-weight:500;margin-top:1px}
+.score-info{flex:1}
+.score-food-name{font-size:17px;font-weight:700;letter-spacing:-0.3px;margin-bottom:4px}
+.score-qty{font-size:12px;color:var(--text2)}
+.score-verdict{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-top:6px}
+.score-verdict.excellent{background:var(--green-dim);color:var(--green)}
+.score-verdict.good{background:var(--blue-dim);color:var(--blue)}
+.score-verdict.moderate{background:var(--yellow-dim);color:var(--yellow)}
+.score-verdict.poor{background:var(--red-dim);color:var(--red)}
+
+/* ── Micro Nutrients ── */
+.micro-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.micro-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.micro-badge.vitamin{background:var(--green-dim);color:var(--green)}
+.micro-badge.mineral{background:var(--blue-dim);color:var(--blue)}
+
+/* ── Progress Bars (coverage) ── */
+.coverage-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.coverage-item{}
+.coverage-header{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:5px}
+.coverage-bar-bg{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.coverage-bar-fill{height:100%;border-radius:3px;transition:width 0.8s ease}
+.coverage-bar-fill.low{background:var(--red)}
+.coverage-bar-fill.mid{background:var(--yellow)}
+.coverage-bar-fill.high{background:var(--green)}
+
+/* ── Recommendations ── */
+.rec-list{display:flex;flex-direction:column;gap:8px}
+.rec-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:var(--r);border-left:3px solid var(--green);font-size:13px;color:var(--text2)}
+.rec-item.warn{border-left-color:var(--yellow)}
+.rec-item.bad{border-left-color:var(--red)}
+
+/* ── Alert ── */
+.alert{padding:12px 16px;border-radius:var(--r);font-size:13px;display:flex;align-items:flex-start;gap:10px}
+.alert-error{background:var(--red-dim);border:1px solid rgba(248,113,113,0.2);color:var(--red)}
+.alert-success{background:var(--green-dim);border:1px solid rgba(34,211,160,0.2);color:var(--green)}
+.alert-warn{background:var(--yellow-dim);border:1px solid rgba(251,191,36,0.2);color:var(--yellow)}
+.alert + .alert{margin-top:8px}
+
+/* ── Toast ── */
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--r2);font-size:13px;font-weight:500;min-width:240px;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:toastIn 0.25s ease;pointer-events:all}
+.toast-success{background:#0d1f1a;border:1px solid rgba(34,211,160,0.3);color:var(--green)}
+.toast-error{background:#1f0d0d;border:1px solid rgba(248,113,113,0.3);color:var(--red)}
+.toast-info{background:var(--surface2);border:1px solid var(--border2);color:var(--text)}
+.toast-dismiss{margin-left:auto;background:none;border:none;cursor:pointer;color:inherit;opacity:0.6;font-size:16px;line-height:1}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px)}}
+
+/* ── Meal Plan ── */
+.day-card{border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:14px}
+.day-header{padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.day-title{font-weight:600;font-size:14px}
+.day-kcal{font-size:12px;color:var(--text2)}
+.day-meals{padding:16px;display:grid;gap:10px}
+.meal-row{display:flex;gap:12px;align-items:flex-start}
+.meal-type{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;min-width:70px;color:var(--text3);padding-top:2px}
+.meal-desc{font-size:13px;color:var(--text)}
+.macro-pills{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.macro-pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.macro-pill.kcal{background:var(--orange-dim);color:var(--orange)}
+.macro-pill.prot{background:var(--blue-dim);color:var(--blue)}
+.macro-pill.carb{background:var(--yellow-dim);color:var(--yellow)}
+.macro-pill.fat{background:var(--purple-dim);color:var(--purple)}
+
+/* ── Food Table ── */
+.food-table{width:100%;border-collapse:collapse;font-size:13px}
+.food-table th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)}
+.food-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text2)}
+.food-table tr:hover td{background:var(--surface2)}
+.food-table tr:last-child td{border-bottom:none}
+.food-search-wrap{position:relative;margin-bottom:16px}
+.food-search-wrap input{width:100%;padding:10px 14px 10px 36px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border var(--transition)}
+.food-search-wrap input:focus{border-color:var(--green)}
+.food-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px}
+
+/* ── History ── */
+.history-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--r);transition:background var(--transition)}
+.history-item:hover{background:var(--surface2)}
+.history-method{font-size:10px;font-weight:700;letter-spacing:0.5px;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;min-width:40px;text-align:center}
+.history-method.get{background:var(--green-dim);color:var(--green)}
+.history-method.post{background:var(--blue-dim);color:var(--blue)}
+.history-method.delete{background:var(--red-dim);color:var(--red)}
+.history-path{flex:1;color:var(--text2);font-family:'JetBrains Mono',monospace;font-size:12px}
+.history-status{font-size:12px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.history-status.ok{color:var(--green)}
+.history-status.err{color:var(--red)}
+.history-time{font-size:11px;color:var(--text3)}
+.empty-state{padding:48px 20px;text-align:center;color:var(--text3)}
+.empty-icon{font-size:36px;margin-bottom:10px;opacity:0.3}
+.empty-text{font-size:14px}
+
+/* ── Export row ── */
+.export-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+/* ── Dashboard Stats ── */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:18px}
+.stat-label{font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.stat-value{font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:-1px;color:var(--green)}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:4px}
+
+/* ── Source Badge ── */
+.source-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
+.source-badge.database{background:var(--green-dim);color:var(--green)}
+.source-badge.estimated{background:var(--yellow-dim);color:var(--yellow)}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .sidebar{display:none}
+  .form-grid-3{grid-template-columns:1fr 1fr}
+  .nutrition-grid{grid-template-columns:repeat(2,1fr)}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .coverage-grid{grid-template-columns:1fr}
+}
+@media(max-width:540px){
+  .page{padding:16px}
+  .form-grid-2,.form-grid-3{grid-template-columns:1fr}
+  .nutrition-grid{grid-template-columns:1fr 1fr}
+  .stats-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Login Screen ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">🥗</div>
+      <div class="login-logo-text">Nutri<span>Scan</span> AI</div>
+    </div>
+    <div class="login-title">Welcome back</div>
+    <div class="login-sub">Enter your name to get started</div>
+    <div class="login-field">
+      <label>Your Name</label>
+      <input type="text" id="login-name" placeholder="e.g. Dibya" autocomplete="name" maxlength="40"/>
+    </div>
+    <button class="btn-login" id="login-btn">Get Started →</button>
+    <div class="login-hint">No account needed — just a name to personalize your experience</div>
+  </div>
+</div>
+
+<!-- ── App Shell ── -->
+<div id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">🥗</div>
+        <div class="sidebar-logo-text">Nutri<span>Scan</span> AI</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Main</div>
+        <button class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">📊</span> Dashboard
+        </button>
+        <button class="nav-item" data-page="analyze">
+          <span class="nav-icon">🔍</span> Analyze Food
+        </button>
+        <button class="nav-item" data-page="plan">
+          <span class="nav-icon">📅</span> Meal Plan
+        </button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Data</div>
+        <button class="nav-item" data-page="foods">
+          <span class="nav-icon">🗃️</span> Food Database
+        </button>
+        <button class="nav-item" data-page="history">
+          <span class="nav-icon">🕑</span> Request History
+        </button>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="sidebar-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-name">Guest</div>
+          <div class="user-role">Free Plan</div>
+        </div>
+        <button class="logout-btn" id="logout-btn" title="Sign out">↩</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-right">
+        <button class="api-status" id="api-status-btn">
+          <span class="status-dot checking" id="status-dot"></span>
+          <span id="status-text">Connecting…</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── DASHBOARD PAGE ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title" id="dash-greeting">Good morning 👋</div>
+        <div class="page-sub">Your nutrition intelligence dashboard</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Foods Analyzed</div>
+          <div class="stat-value" id="stat-analyzed">0</div>
+          <div class="stat-sub">This session</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Foods in DB</div>
+          <div class="stat-value" id="stat-db">—</div>
+          <div class="stat-sub">Ready to analyze</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">API Status</div>
+          <div class="stat-value" id="stat-api" style="font-size:16px;padding-top:6px">Checking</div>
+          <div class="stat-sub" id="stat-version">—</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Quick Start</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <button class="btn btn-primary" onclick="navigate('analyze')">🔍 Analyze a Food</button>
+          <button class="btn btn-secondary" onclick="navigate('plan')">📅 Generate Meal Plan</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Supported Diet Profiles</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <span class="micro-badge vitamin">Balanced</span>
+          <span class="micro-badge vitamin">High Protein</span>
+          <span class="micro-badge vitamin">Keto</span>
+          <span class="micro-badge vitamin">Vegan</span>
+          <span class="micro-badge vitamin">Vegetarian</span>
+          <span class="micro-badge mineral">Diabetic</span>
+          <span class="micro-badge mineral">Weight Loss</span>
+          <span class="micro-badge mineral">Low Carb</span>
+          <span class="micro-badge mineral">Mediterranean</span>
+          <span class="micro-badge mineral">Muscle Gain</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ANALYZE PAGE ── -->
+    <div class="page" id="page-analyze">
+      <div class="page-header">
+        <div class="page-title">Analyze Food</div>
+        <div class="page-sub">Get detailed macro & micronutrient breakdown for any food item</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+        <!-- Input Panel -->
+        <div>
+          <div class="card">
+            <div class="card-title">Food Input</div>
+            <div class="form-grid" style="margin-bottom:16px">
+              <div class="form-group">
+                <label class="form-label">Food Name <span class="req">*</span></label>
+                <input class="form-input" id="food-name" type="text" placeholder="e.g. chicken, banana, dal…" maxlength="200" autocomplete="off"/>
+                <span class="field-error" id="food-name-err">Enter a food name or upload an image</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input class="form-input" id="quantity" type="text" placeholder="e.g. 150g, 1 serving, 2 pieces" maxlength="50"/>
+                <span class="form-hint">Default: 100g if not specified</span>
+              </div>
+            </div>
+
+            <div class="upload-zone" id="upload-zone">
+              <div class="upload-zone-icon">📷</div>
+              <div class="upload-zone-text">Drop image here or <strong>browse</strong></div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">JPG, PNG, WebP · Max 5MB</div>
+              <input type="file" id="food-image" accept="image/jpeg,image/png,image/webp,image/gif"/>
+            </div>
+            <span class="field-error" id="err-image"></span>
+            <div class="upload-preview" id="upload-preview">
+              <img id="preview-img" src="" alt="Preview"/>
+              <button class="remove-preview" id="remove-preview-btn">✕</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:16px">
+            <div class="card-title">Profile</div>
+            <div class="form-grid form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Diet Preference</label>
+                <select class="form-select" id="diet-pref">
+                  <option value="balanced">Balanced</option>
+                  <option value="high-protein">High Protein</option>
+                  <option value="low-carb">Low Carb</option>
+                  <option value="keto">Keto</option>
+                  <option value="vegetarian">Vegetarian</option>
+                  <option value="vegan">Vegan</option>
+                  <option value="mediterranean">Mediterranean</option>
+                  <option value="diabetic">Diabetic</option>
+                  <option value="weight-loss">Weight Loss</option>
+                  <option value="muscle-gain">Muscle Gain</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Health Condition</label>
+                <select class="form-select" id="health-cond">
+                  <option value="none">None</option>
+                  <option value="diabetes">Diabetes</option>
+                  <option value="hypertension">Hypertension</option>
+                  <option value="obesity">Obesity</option>
+                  <option value="celiac">Celiac</option>
+                  <option value="lactose-intolerant">Lactose Intolerant</option>
+                  <option value="pcos">PCOS</option>
+                  <option value="thyroid">Thyroid</option>
+                  <option value="heart-disease">Heart Disease</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Activity Level</label>
+                <select class="form-select" id="activity">
+                  <option value="sedentary">Sedentary</option>
+                  <option value="lightly-active">Lightly Active</option>
+                  <option value="moderately-active" selected>Moderately Active</option>
+                  <option value="very-active">Very Active</option>
+                  <option value="extremely-active">Extremely Active</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid form-grid-3" style="margin-top:14px">
+              <div class="form-group">
+                <label class="form-label">Age</label>
+                <input class="form-input" id="age" type="number" placeholder="yrs" min="1" max="120"/>
+                <span class="field-error" id="age-err">1–120</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Weight (kg)</label>
+                <input class="form-input" id="weight" type="number" placeholder="kg" min="1" max="500"/>
+                <span class="field-error" id="weight-err">1–500</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Height (cm)</label>
+                <input class="form-input" id="height" type="number" placeholder="cm" min="50" max="300"/>
+                <span class="field-error" id="height-err">50–300</span>
+              </div>
+            </div>
+
+            <div class="macro-toggle" id="macro-toggle" style="margin-top:14px">
+              <span class="macro-toggle-icon" id="macro-toggle-icon">▶</span>
+              <span>Custom Macro Goals</span>
+              <span style="margin-left:auto;font-size:11px;color:var(--text3)">optional</span>
+            </div>
+            <div class="macro-inputs" id="macro-inputs">
+              <div class="form-grid form-grid-2" style="margin-top:12px">
+                <div class="form-group">
+                  <label class="form-label">Calories Goal</label>
+                  <input class="form-input" id="mg-calories" type="number" placeholder="e.g. 2000" min="500" max="10000"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Protein (g)</label>
+                  <input class="form-input" id="mg-protein" type="number" placeholder="e.g. 150" min="0" max="500"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Carbs (g)</label>
+                  <input class="form-input" id="mg-carbs" type="number" placeholder="e.g. 250" min="0" max="1000"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fats (g)</label>
+                  <input class="form-input" id="mg-fats" type="number" placeholder="e.g. 65" min="0" max="500"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-full" id="analyze-btn" style="margin-top:14px">
+            🔍 Analyze Nutrition
+          </button>
+        </div>
+
+        <!-- Result Panel -->
+        <div>
+          <div id="analyze-error"></div>
+
+          <div class="loader" id="analyze-loader">
+            <div class="spinner"></div>
+            <div class="loader-text">Analyzing nutritional data…</div>
+          </div>
+
+          <div id="result-placeholder">
+            <div class="card">
+              <div class="placeholder-state">
+                <div class="placeholder-icon">🥗</div>
+                <div class="placeholder-text">Results will appear here after analysis</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="result-area" id="result-area">
+            <!-- Health Score -->
+            <div class="health-score-row" id="score-row">
+              <div class="score-ring">
+                <svg viewBox="0 0 64 64" width="64" height="64">
+                  <circle class="score-ring-bg" cx="32" cy="32" r="27" stroke-width="5"/>
+                  <circle class="score-ring-fill" id="score-ring-fill" cx="32" cy="32" r="27" stroke-width="5"
+                    stroke-dasharray="169.6" stroke-dashoffset="169.6"/>
+                </svg>
+                <div class="score-center">
+                  <span class="score-num" id="score-num">—</span>
+                  <span class="score-label-text">score</span>
+                </div>
+              </div>
+              <div class="score-info">
+                <div class="score-food-name" id="res-food-name">—</div>
+                <div class="score-qty" id="res-quantity">—</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+                  <span class="score-verdict" id="score-verdict">—</span>
+                  <span class="source-badge" id="res-source">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Macros -->
+            <div class="nutrition-grid">
+              <div class="nutrition-card calories">
+                <div class="nutrition-label">Calories</div>
+                <div class="nutrition-value" id="m-calories">—</div>
+                <div class="nutrition-unit">kcal</div>
+              </div>
+              <div class="nutrition-card protein">
+                <div class="nutrition-label">Protein</div>
+                <div class="nutrition-value" id="m-protein">—</div>
+                <div class="nutrition-unit">grams</div>
+              </div>
+              <div class="nutrition-card carbs">
+                <div class="nutrition-label">Carbs</div>
+                <div class="nutrition-value" id="m-carbs">—</div>
+                <div class="nutrition-unit">grams</div>
+              </div>
+              <div class="nutrition-card fats">
+                <div class="nutrition-label">Fats</div>
+                <div class="nutrition-value" id="m-fats">—</div>
+                <div class="nutrition-unit">grams</div>
+              </div>
+            </div>
+
+            <!-- Fiber & Sugar -->
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-title">Additional Nutrients</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div>
+                  <div style="font-size:11px;color:var(--text3);margin-bottom:4px">FIBER</div>
+                  <div style="font-size:20px;font-weight:700;font-family:'JetBrains Mono',monospace" id="m-fiber">—</div>
+                  <div style="font-size:11px;color:var(--text3)">grams</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text3);margin-bottom:4px">SUGAR</div>
+                  <div style="font-size:20px;font-weight:700;font-family:'JetBrains Mono',monospace" id="m-sugar">—</div>
+                  <div style="font-size:11px;color:var(--text3)">grams</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Vitamins & Minerals -->
+            <div class="card" style="margin-bottom:16px" id="micro-card">
+              <div class="card-title">Vitamins & Minerals</div>
+              <div class="micro-row" id="micro-badges"></div>
+            </div>
+
+            <!-- Coverage -->
+            <div class="card" id="coverage-card" style="display:none;margin-bottom:16px">
+              <div class="card-title">Daily Target Coverage</div>
+              <div class="coverage-grid" id="coverage-grid"></div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-title">Recommendations</div>
+              <div class="rec-list" id="rec-list"></div>
+            </div>
+
+            <!-- Export -->
+            <div class="export-row">
+              <button class="btn btn-secondary btn-sm" id="export-json-btn">⬇ Export JSON</button>
+              <button class="btn btn-secondary btn-sm" id="copy-clipboard-btn">📋 Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MEAL PLAN PAGE ── -->
+    <div class="page" id="page-plan">
+      <div class="page-header">
+        <div class="page-title">Meal Plan Generator</div>
+        <div class="page-sub">Get a personalized meal plan based on your goals and health profile</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;align-items:start">
+        <div>
+          <div class="card">
+            <div class="card-title">Plan Settings</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Diet Preference <span class="req">*</span></label>
+                <select class="form-select" id="plan-diet">
+                  <option value="balanced">Balanced</option>
+                  <option value="high-protein">High Protein</option>
+                  <option value="low-carb">Low Carb</option>
+                  <option value="keto">Keto</option>
+                  <option value="vegetarian">Vegetarian</option>
+                  <option value="vegan">Vegan</option>
+                  <option value="mediterranean">Mediterranean</option>
+                  <option value="diabetic">Diabetic</option>
+                  <option value="weight-loss">Weight Loss</option>
+                  <option value="muscle-gain">Muscle Gain</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Health Condition</label>
+                <select class="form-select" id="plan-health">
+                  <option value="none">None</option>
+                  <option value="diabetes">Diabetes</option>
+                  <option value="hypertension">Hypertension</option>
+                  <option value="obesity">Obesity</option>
+                  <option value="celiac">Celiac</option>
+                  <option value="pcos">PCOS</option>
+                  <option value="thyroid">Thyroid</option>
+                  <option value="heart-disease">Heart Disease</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Activity Level</label>
+                <select class="form-select" id="plan-activity">
+                  <option value="sedentary">Sedentary</option>
+                  <option value="lightly-active">Lightly Active</option>
+                  <option value="moderately-active" selected>Moderately Active</option>
+                  <option value="very-active">Very Active</option>
+                  <option value="extremely-active">Extremely Active</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Number of Days</label>
+                <select class="form-select" id="plan-days">
+                  <option value="1">1 Day</option>
+                  <option value="3" selected>3 Days</option>
+                  <option value="5">5 Days</option>
+                  <option value="7">7 Days</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid form-grid-3" style="margin-top:14px">
+              <div class="form-group">
+                <label class="form-label">Age</label>
+                <input class="form-input" id="plan-age" type="number" placeholder="yrs" min="1" max="120"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Weight (kg)</label>
+                <input class="form-input" id="plan-weight" type="number" placeholder="kg" min="1" max="500"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Height (cm)</label>
+                <input class="form-input" id="plan-height" type="number" placeholder="cm" min="50" max="300"/>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-full" id="plan-btn" style="margin-top:16px">
+              📅 Generate Plan
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div id="plan-error"></div>
+          <div class="loader" id="plan-loader">
+            <div class="spinner"></div>
+            <div class="loader-text">Generating your personalized plan…</div>
+          </div>
+          <div id="plan-placeholder">
+            <div class="card">
+              <div class="placeholder-state">
+                <div class="placeholder-icon">📅</div>
+                <div class="placeholder-text">Your personalized meal plan will appear here</div>
+              </div>
+            </div>
+          </div>
+          <div id="plan-result-area"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FOOD DATABASE PAGE ── -->
+    <div class="page" id="page-foods">
+      <div class="page-header">
+        <div class="page-title">Food Database</div>
+        <div class="page-sub">Browse all supported food items — click Analyze to inspect any food</div>
+      </div>
+      <div class="card">
+        <div class="food-search-wrap">
+          <span class="food-search-icon">🔍</span>
+          <input type="text" id="food-search" placeholder="Search foods…" autocomplete="off"/>
+        </div>
+        <div id="food-table-wrap">
+          <div class="loader show" id="foods-loader">
+            <div class="spinner"></div>
+            <div class="loader-text">Loading food database…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HISTORY PAGE ── -->
+    <div class="page" id="page-history">
+      <div class="page-header">
+        <div class="page-title">Request History</div>
+        <div class="page-sub">Recent API requests from this session</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div class="card-title" style="margin:0">Recent Requests</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary btn-sm" id="history-refresh-btn">↺ Refresh</button>
+            <button class="btn btn-danger btn-sm" id="history-clear-btn">✕ Clear</button>
+          </div>
+        </div>
+        <div id="history-list">
+          <div class="loader show"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
