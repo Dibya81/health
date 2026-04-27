@@ -71,14 +71,14 @@ const validateImageFile = (req, res, next) => {
     return next(new ValidationError('Invalid file type', [{
       field: 'image',
       message: `Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}`,
-    }]);
+    }]));
   }
 
   if (req.file.size > MAX_FILE_SIZE) {
     return next(new ValidationError('File too large', [{
       field: 'image',
       message: 'Maximum file size is 5MB',
-    }]);
+    }]));
   }
 
   next();

@@ -85,10 +85,12 @@ const { apiKeyAuth } = require('./middleware/auth');
 app.use(apiKeyAuth);
 
 // Logging
-const logDir = path.join(__dirname, '../logs');
-if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
-const logStream = fs.createWriteStream(path.join(logDir, 'access.log'), { flags: 'a' });
-app.use(morgan('combined', { stream: logStream }));
+if (!process.env.VERCEL) {
+  const logDir = path.join(__dirname, '../logs');
+  if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+  const logStream = fs.createWriteStream(path.join(logDir, 'access.log'), { flags: 'a' });
+  app.use(morgan('combined', { stream: logStream }));
+}
 app.use(morgan('dev'));
 app.use(requestLogger);
 

@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const LOG_DIR = path.join(__dirname, '../../logs');
-if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
+if (!process.env.VERCEL && !fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
 
 const logger = {
   info: (msg, meta = {}) => log('INFO', msg, meta),
@@ -22,8 +22,13 @@ function log(level, msg, meta) {
     message: msg,
     ...meta,
   });
-  const logFile = path.join(LOG_DIR, 'app.log');
-  fs.appendFileSync(logFile, entry + '\n');
+  if (!process.env.VERCEL) {
+    const logFile = path.join(LOG_DIR, 'app.log');
+    fs.appendFileSync(logFile, entry + '\n');
+  } else {
+    if (level === 'INFO') console.log(entry);
+    if (level === 'WARN') console.warn(entry);
+  }
   if (level === 'ERROR') console.error(entry);
 }
 
